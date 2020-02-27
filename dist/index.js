@@ -390,18 +390,18 @@ const install_util_1 = __webpack_require__(962);
  */
 function formatReleaseURL(os, arch, version) {
     // massage the arch to match gcloud sdk conventions
-    if (arch == 'x64') {
-        arch = 'x86_64';
+    if (arch == "x64") {
+        arch = "x86_64";
     }
     let objectName;
     switch (os) {
-        case 'linux':
+        case "linux":
             objectName = `google-cloud-sdk-${version}-linux-${arch}.tar.gz`;
             break;
-        case 'darwin':
+        case "darwin":
             objectName = `google-cloud-sdk-${version}-darwin-${arch}.tar.gz`;
             break;
-        case 'win32':
+        case "win32":
             objectName = `google-cloud-sdk-${version}-windows-${arch}.zip`;
             break;
         default:
@@ -434,7 +434,7 @@ function getReleaseURL(os, arch, version) {
             }), {
                 delay: 200,
                 factor: 2,
-                maxAttempts: 4,
+                maxAttempts: 4
             });
         }
         catch (err) {
@@ -8669,25 +8669,25 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             tmp.setGracefulCleanup();
-            let version = core.getInput('version');
-            if (!version || version == 'latest') {
+            let version = core.getInput("version");
+            if (!version || version == "latest") {
                 version = yield version_util_1.getLatestGcloudSDKVersion();
             }
             // install the gcloud if not already present
-            let toolPath = toolCache.find('gcloud', version);
+            let toolPath = toolCache.find("gcloud", version);
             if (!toolPath) {
                 toolPath = yield installGcloudSDK(version);
             }
-            const serviceAccountEmail = core.getInput('service_account_email') || '';
-            const serviceAccountKey = core.getInput('service_account_key');
+            const serviceAccountEmail = core.getInput("service_account_email") || "";
+            const serviceAccountKey = core.getInput("service_account_key");
             // if a service account key isn't provided, log an un-authenticated notice
             if (!serviceAccountKey) {
-                core.info('gcloud SDK installed without authentication.');
+                core.info("gcloud SDK installed without authentication.");
                 return;
             }
             // Handle base64-encoded credentials
             let serviceAccountJSON = serviceAccountKey;
-            if (!serviceAccountKey.trim().startsWith('{')) {
+            if (!serviceAccountKey.trim().startsWith("{")) {
                 serviceAccountJSON = js_base64_1.Base64.decode(serviceAccountKey);
             }
             // write the service account key to a temporary file
@@ -8703,32 +8703,40 @@ function run() {
                 });
             });
             yield fs_1.promises.writeFile(tmpKeyFilePath, serviceAccountJSON);
+            const kobj = JSON.parse(serviceAccountJSON);
             // A workaround for https://github.com/actions/toolkit/issues/229
             // Currently exec on windows runs as cmd shell.
-            let toolCommand1 = 'gcloud';
-            if (process.platform == 'win32') {
-                toolCommand1 = 'gcloud.cmd';
+            let toolCommand1 = "gcloud";
+            if (process.platform == "win32") {
+                toolCommand1 = "gcloud.cmd";
             }
-            let toolCommand2 = 'gsutil';
-            if (process.platform == 'win32') {
-                toolCommand1 = 'gsutil.cmd';
+            let toolCommand2 = "gsutil";
+            if (process.platform == "win32") {
+                toolCommand1 = "gsutil.cmd";
             }
             // authenticate as the specified service account
-            yield exec.exec(`${toolCommand1} auth activate-service-account ${serviceAccountEmail} --key-file=${tmpKeyFilePath}`);
-            yield exec.exec(`${toolCommand2} auth activate-service-account ${serviceAccountEmail} --key-file=${tmpKeyFilePath}`);
+            if (kobj.hasOwnProperty("project_id")) {
+                yield exec.exec(`${toolCommand1} auth activate-service-account --project=${kobj.project_id} --key-file=${tmpKeyFilePath}`);
+            }
+            else {
+                yield exec.exec(`${toolCommand1} auth activate-service-account --key-file=${tmpKeyFilePath}`);
+            }
+            // await exec.exec(
+            //     `${toolCommand2} auth activate-service-account ${serviceAccountEmail} --key-file=${tmpKeyFilePath}`,
+            // );
             // Export credentials if requested - these credentials must be exported in
             // the shared workspace directory, since the filesystem must be shared among
             // all steps.
-            const exportCreds = core.getInput('export_default_credentials');
-            if (String(exportCreds).toLowerCase() === 'true') {
+            const exportCreds = core.getInput("export_default_credentials");
+            if (String(exportCreds).toLowerCase() === "true") {
                 const workspace = process.env.GITHUB_WORKSPACE;
                 if (!workspace) {
-                    throw new Error('Missing GITHUB_WORKSPACE!');
+                    throw new Error("Missing GITHUB_WORKSPACE!");
                 }
                 const credsPath = path_1.default.join(workspace, uuid_1.v4());
                 yield fs_1.promises.writeFile(credsPath, serviceAccountJSON);
-                core.exportVariable('GOOGLE_APPLICATION_CREDENTIALS', credsPath);
-                core.info('Successfully exported Default Application Credentials');
+                core.exportVariable("GOOGLE_APPLICATION_CREDENTIALS", credsPath);
+                core.info("Successfully exported Default Application Credentials");
             }
         }
         catch (error) {

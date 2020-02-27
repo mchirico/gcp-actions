@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import * as httpm from 'typed-rest-client/HttpClient';
-import {retry} from '@lifeomic/attempt';
-import {GCLOUD_METRICS_LABEL} from './install-util';
+import * as httpm from "typed-rest-client/HttpClient";
+import { retry } from "@lifeomic/attempt";
+import { GCLOUD_METRICS_LABEL } from "./install-util";
 
 /**
  * Formats the gcloud SDK release URL according to the specified arguments.
@@ -28,19 +28,19 @@ import {GCLOUD_METRICS_LABEL} from './install-util';
  */
 function formatReleaseURL(os: string, arch: string, version: string): string {
   // massage the arch to match gcloud sdk conventions
-  if (arch == 'x64') {
-    arch = 'x86_64';
+  if (arch == "x64") {
+    arch = "x86_64";
   }
 
   let objectName: string;
   switch (os) {
-    case 'linux':
+    case "linux":
       objectName = `google-cloud-sdk-${version}-linux-${arch}.tar.gz`;
       break;
-    case 'darwin':
+    case "darwin":
       objectName = `google-cloud-sdk-${version}-darwin-${arch}.tar.gz`;
       break;
-    case 'win32':
+    case "win32":
       objectName = `google-cloud-sdk-${version}-windows-${arch}.zip`;
       break;
     default:
@@ -48,7 +48,7 @@ function formatReleaseURL(os: string, arch: string, version: string): string {
   }
 
   return encodeURI(
-    `https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${objectName}`,
+    `https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${objectName}`
   );
 }
 
@@ -64,7 +64,7 @@ function formatReleaseURL(os: string, arch: string, version: string): string {
 export async function getReleaseURL(
   os: string,
   arch: string,
-  version: string,
+  version: string
 ): Promise<string> {
   try {
     const url = formatReleaseURL(os, arch, version);
@@ -81,12 +81,12 @@ export async function getReleaseURL(
       {
         delay: 200,
         factor: 2,
-        maxAttempts: 4,
-      },
+        maxAttempts: 4
+      }
     );
   } catch (err) {
     throw new Error(
-      `Error trying to get gcloud SDK release URL: os: ${os} arch: ${arch} version: ${version}, err: ${err}`,
+      `Error trying to get gcloud SDK release URL: os: ${os} arch: ${arch} version: ${version}, err: ${err}`
     );
   }
 }

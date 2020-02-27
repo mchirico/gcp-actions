@@ -14,47 +14,47 @@
  * limitations under the License.
  */
 
-import * as core from '@actions/core';
-import * as exec from '@actions/exec';
-import * as toolCache from '@actions/tool-cache';
-import {Base64} from 'js-base64';
-import {promises as fs} from 'fs';
-import path from 'path';
-import {v4 as uuidv4} from 'uuid';
-import * as tmp from 'tmp';
-import * as os from 'os';
-import {getReleaseURL} from '../src/format-url';
-import {getLatestGcloudSDKVersion} from '../src/version-util';
-import * as downloadUtil from './download-util';
-import * as installUtil from './install-util';
+import * as core from "@actions/core";
+import * as exec from "@actions/exec";
+import * as toolCache from "@actions/tool-cache";
+import { Base64 } from "js-base64";
+import { promises as fs } from "fs";
+import path from "path";
+import { v4 as uuidv4 } from "uuid";
+import * as tmp from "tmp";
+import * as os from "os";
+import { getReleaseURL } from "../src/format-url";
+import { getLatestGcloudSDKVersion } from "../src/version-util";
+import * as downloadUtil from "./download-util";
+import * as installUtil from "./install-util";
 
 async function run() {
   try {
     tmp.setGracefulCleanup();
 
-    let version = core.getInput('version');
-    if (!version || version == 'latest') {
+    let version = core.getInput("version");
+    if (!version || version == "latest") {
       version = await getLatestGcloudSDKVersion();
     }
 
     // install the gcloud if not already present
-    let toolPath = toolCache.find('gcloud', version);
+    let toolPath = toolCache.find("gcloud", version);
     if (!toolPath) {
       toolPath = await installGcloudSDK(version);
     }
 
-    const serviceAccountEmail = core.getInput('service_account_email') || '';
-    const serviceAccountKey = core.getInput('service_account_key');
+    const serviceAccountEmail = core.getInput("service_account_email") || "";
+    const serviceAccountKey = core.getInput("service_account_key");
 
     // if a service account key isn't provided, log an un-authenticated notice
     if (!serviceAccountKey) {
-      core.info('gcloud SDK installed without authentication.');
+      core.info("gcloud SDK installed without authentication.");
       return;
     }
 
     // Handle base64-encoded credentials
     let serviceAccountJSON = serviceAccountKey;
-    if (!serviceAccountKey.trim().startsWith('{')) {
+    if (!serviceAccountKey.trim().startsWith("{")) {
       serviceAccountJSON = Base64.decode(serviceAccountKey);
     }
 
@@ -72,43 +72,51 @@ async function run() {
     });
     await fs.writeFile(tmpKeyFilePath, serviceAccountJSON);
 
+    const kobj = JSON.parse(serviceAccountJSON);
+
     // A workaround for https://github.com/actions/toolkit/issues/229
     // Currently exec on windows runs as cmd shell.
-    let toolCommand1 = 'gcloud';
-    if (process.platform == 'win32') {
-      toolCommand1 = 'gcloud.cmd';
+    let toolCommand1 = "gcloud";
+    if (process.platform == "win32") {
+      toolCommand1 = "gcloud.cmd";
     }
 
-    let toolCommand2 = 'gsutil';
-    if (process.platform == 'win32') {
-      toolCommand1 = 'gsutil.cmd';
+    let toolCommand2 = "gsutil";
+    if (process.platform == "win32") {
+      toolCommand1 = "gsutil.cmd";
     }
-
 
     // authenticate as the specified service account
-    await exec.exec(
-      `${toolCommand1} auth activate-service-account ${serviceAccountEmail} --key-file=${tmpKeyFilePath}`,
-    );
 
-    await exec.exec(
-        `${toolCommand2} auth activate-service-account ${serviceAccountEmail} --key-file=${tmpKeyFilePath}`,
-    );
+    if (kobj.hasOwnProperty("project_id")) {
+      await exec.exec(
+        `${toolCommand1} auth activate-service-account --project=${kobj.project_id} --key-file=${tmpKeyFilePath}`
+      );
+    } else {
+      await exec.exec(
+        `${toolCommand1} auth activate-service-account --key-file=${tmpKeyFilePath}`
+      );
+    }
+
+    // await exec.exec(
+    //     `${toolCommand2} auth activate-service-account ${serviceAccountEmail} --key-file=${tmpKeyFilePath}`,
+    // );
 
     // Export credentials if requested - these credentials must be exported in
     // the shared workspace directory, since the filesystem must be shared among
     // all steps.
-    const exportCreds = core.getInput('export_default_credentials');
-    if (String(exportCreds).toLowerCase() === 'true') {
+    const exportCreds = core.getInput("export_default_credentials");
+    if (String(exportCreds).toLowerCase() === "true") {
       const workspace = process.env.GITHUB_WORKSPACE;
       if (!workspace) {
-        throw new Error('Missing GITHUB_WORKSPACE!');
+        throw new Error("Missing GITHUB_WORKSPACE!");
       }
 
       const credsPath = path.join(workspace, uuidv4());
       await fs.writeFile(credsPath, serviceAccountJSON);
 
-      core.exportVariable('GOOGLE_APPLICATION_CREDENTIALS', credsPath);
-      core.info('Successfully exported Default Application Credentials');
+      core.exportVariable("GOOGLE_APPLICATION_CREDENTIALS", credsPath);
+      core.info("Successfully exported Default Application Credentials");
     }
   } catch (error) {
     core.setFailed(error.message);

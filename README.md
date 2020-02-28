@@ -45,17 +45,23 @@ It does the following:
 ```yaml
 steps:
 - uses: actions/checkout@v2
-- uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+- uses: mchirico/gcp-actions@v1
   with:
-    version: 'latest'
+    version: '282.0.0'
     service_account_key: ${{ secrets.GCP_SA_KEY }}
     export_default_credentials: true
-- run: gcloud info
+- run: |
+    gcloud info
+    gsutil ls
+    gcloud auth configure-docker
+    gcloud components install minikube --quiet
+    gcloud components install kubectl --quiet
+
 ```
 
 ## Inputs
 
-* `version`: (Optional) The version of the gcloud to be installed.  Example: `275.0.0`, Default: `latest`
+* `version`: (Optional) The version of the gcloud to be installed.  Example: `282.0.0`, Default: `latest`
 
 * `service_account_email`: (Optional) The service account email which will be used for authentication.
 

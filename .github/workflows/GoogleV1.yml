@@ -1,4 +1,4 @@
-name: Goolge Services Testing...
+name: Version 1
 
 on: [push]
 
@@ -21,7 +21,7 @@ jobs:
 
 
     # Setup gcloud CLI
-    - uses: mchirico/gcp-actions@master
+    - uses: mchirico/gcp-actions@v1
       with:
         version: 'latest'
         service_account_key: ${{ secrets.OWNER }}
@@ -37,12 +37,6 @@ jobs:
         # View storage
         gcloud version
         gsutil ls
-        gcloud components install minikube --quiet
-        gcloud components install kubectl --quiet
-
-    - run: |
-        sudo minikube start --vm-driver=none
-
 
 
     # BigQuery

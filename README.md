@@ -45,12 +45,15 @@ It does the following:
 ```yaml
 steps:
 - uses: actions/checkout@v2
-- uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+- uses: mchirico/gcp-actions@v1
   with:
     version: 'latest'
     service_account_key: ${{ secrets.GCP_SA_KEY }}
     export_default_credentials: true
-- run: gcloud info
+- run: |
+    gcloud info
+    gsutil ls
+    gcloud auth configure-docker
 ```
 
 ## Inputs

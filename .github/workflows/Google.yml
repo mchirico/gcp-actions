@@ -36,6 +36,7 @@ jobs:
     - run: |
         # View storage
         gcloud version
+        gsutil ls
 
 
     # BigQuery

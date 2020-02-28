@@ -33,6 +33,11 @@ jobs:
         # via gcloud command-line tool.
         gcloud auth configure-docker
 
+
+    - run: |
+        curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64  && sudo install minikube-linux-amd64 /usr/local/bin/minikube
+
+
     - run: |
         # View storage
         gcloud version

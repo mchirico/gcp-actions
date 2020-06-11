@@ -51,6 +51,7 @@ steps:
     service_account_key: ${{ secrets.GCP_SA_KEY }}
     export_default_credentials: true
 - run: |
+    sudo apt install conntrack 
     gcloud info
     gsutil ls
     gcloud auth configure-docker

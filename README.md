@@ -14,6 +14,17 @@
 
 # setup-gcloud
 
+## If you need to update package.json
+
+```
+# install npm-check-updates
+ncu -u
+npm install
+
+```
+
+
+
 This action configures the [Google Cloud SDK][sdk] in the environment for use in
 actions. The Google Cloud SDK includes both the [gcloud][gcloud] and
 [gsutil][gsutil] binaries.

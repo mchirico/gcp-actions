@@ -23,6 +23,19 @@ npm install
 
 ```
 
+## Last updated:
+
+```
+git add dist
+git commit -a -m "ncu -u"
+git push origin release/0.0.4
+
+git tag -fa v1 -m "Update v1 tag with release/0.0.4"
+git push origin v1 --force
+
+```
+
+
 
 
 This action configures the [Google Cloud SDK][sdk] in the environment for use in
